@@ -2,6 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
+//import db connection
+require('./connection')
+
 const app = express()
 //body-parser
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -9,11 +12,6 @@ app.use(bodyParser.json())
 
 //cors
 app.use(cors())
-
-
-// app.get('/', (res, req) => {
-//     res.send('Hello')
-// })
 
 app.post('/send', (req, res) => {
     

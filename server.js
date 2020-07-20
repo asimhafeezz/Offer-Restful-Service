@@ -4,14 +4,16 @@ const cors = require('cors')
 
 const multer =require('multer')
 const path=require('path');
-const directory= '../../carrentalmanagement/public/offerImages';
+const directory = '../../carrentalmanagement/public/offerImages';
+var fname = null
 const storage=multer.diskStorage({
         destination:function(req,file,cb){
                 //define the directory
                 cb(null,directory);
         },
         filename:function(req,file,cb){
-                cb(null,new Date().toISOString().replace(/:/g, '-')+file.originalname);
+                fname = new Date().toISOString().replace(/:/g, '-')+file.originalname
+                cb(null,fname);
         }
 });
 const upload=multer({storage:storage});
@@ -41,6 +43,8 @@ const {
 app.post('/uploadFile', upload.single('offerImage'), (req, res) => {
     let offerImagePath = req.file.originalname
 
+    console.log("offerimagepath",offerImagePath)
+    console.log("offerbody",req.body)
     let {
         offerName,
         offerLocation,
@@ -51,12 +55,12 @@ app.post('/uploadFile', upload.single('offerImage'), (req, res) => {
         const offer = new Offer({
             offerName: offerName,
             offerLocation: offerLocation,
-            offerImagePath: new Date().toISOString().replace(/:/g, '-') + offerImagePath,
+            offerImagePath: fname,
             offerDescription: offerDescription
         })
 
         const result = await offer.save()
-        console.log(result)
+        console.log(result.offerImagePath)
     }
 
     addOffer()
@@ -163,6 +167,13 @@ app.delete('/deleteofferbyid/:id', (req, res) => {
     res.end('Data Deleted')
 })
 
+
+
+//testing
+app.get('/test', (req, res) => {
+    console.log("body" , req.body)
+    console.log("req",req)
+})
 
 
 app.listen(5000, () => console.log('server started...'))

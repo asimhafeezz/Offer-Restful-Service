@@ -2,9 +2,27 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
+const multer =require('multer')
+const path=require('path');
+const directory= '../../carrentalmanagement/public/offerImages';
+const storage=multer.diskStorage({
+        destination:function(req,file,cb){
+                //define the directory
+                cb(null,directory);
+        },
+        filename:function(req,file,cb){
+                cb(null,new Date().toISOString().replace(/:/g, '-')+file.originalname);
+        }
+});
+const upload=multer({storage:storage});
+
 const app = express()
+
+
 //body-parser
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({
+    extended: false
+}))
 app.use(bodyParser.json())
 
 //cors
@@ -14,26 +32,65 @@ app.use(cors())
 require('./connection')
 
 //import schema and model
-const {Offer} = require('./schema')
+const {
+    Offer
+} = require('./schema')
 
 
+//upload images
+app.post('/uploadFile', upload.single('offerImage'), (req, res) => {
+    let offerImagePath = req.file.originalname
+
+    let {
+        offerName,
+        offerLocation,
+        offerDescription
+    } = req.body
+
+    let addOffer = async () => {
+        const offer = new Offer({
+            offerName: offerName,
+            offerLocation: offerLocation,
+            offerImagePath: new Date().toISOString().replace(/:/g, '-') + offerImagePath,
+            offerDescription: offerDescription
+        })
+
+        const result = await offer.save()
+        console.log(result)
+    }
+
+    addOffer()
+
+    res.end('Data saved')
+})
+
+app.get('/getImage',(req,res)=>{
+    const {offerImage}=req.body;
+
+    res.send(path.resolve(directory+offerImage));
+})
 
 
 //add new offer
 app.post('/offer', (req, res) => {
 
-    let {offerName , offerLocation , offerImagePath , offerDescription} = req.body
+    let {
+        offerName,
+        offerLocation,
+        offerImagePath,
+        offerDescription
+    } = req.body
 
     let addOffer = async () => {
-    const offer = new Offer({
-    offerName: 'offerName',
-    offerLocation: 'offerLocation',
-    offerImagePath: 'offerImagePath',
-    offerDescription: 'offerDescription'
-    })
-    
-    const result = await offer.save()
-    console.log(result)
+        const offer = new Offer({
+            offerName: offerName,
+            offerLocation: offerLocation,
+            offerImagePath: offerImagePath,
+            offerDescription: offerDescription
+        })
+
+        const result = await offer.save()
+        console.log(result)
     }
 
     addOffer()
@@ -42,53 +99,49 @@ app.post('/offer', (req, res) => {
 })
 
 //get all offers offer
-app.post('/alloffer', (req, res) => {
+app.get('/alloffer', (req, res) => {
 
-    let getOffers = async () => {
-        const result_offers = await Offer.find()
-        console.log(result_offers)
-    }
-
-    getOffers()
-
-    res.end('Data saved')
+    Offer.find().then(resp => res.status(200).json({ 'data': resp }))
+    .catch(err => console.log(err.message))
 })
 
 //find by id 
-app.post('/offerfindbyid', (req, res) => {
+app.get('/offerfindbyid/:id', (req, res) => {
 
-    let getOffersByID = async () => {
-        const result_offers = await Offer.findById(req.body.id)
-        console.log(result_offers)
-    }
-
-    getOffersByID()
-
-    res.end('Data saved')
+    Offer.findById(req.params.id).then(resp => {
+        res.status(200).json({ 'data': resp })
+        res.end()
+    })
+    .catch(err => console.log(err.message))
 })
 
 //update offer by id 
-app.post('/updateofferbyid', (req, res) => {
+app.put('/updateofferbyid/:id', (req, res) => {
 
-    let { offerName , offerLocation , offerImagePath , offerDescription , id} = req.body
-    
+    let {
+        offerName,
+        offerLocation,
+        offerImagePath,
+        offerDescription
+    } = req.body
+
 
     let updateCourse = async () => {
 
-    const result_offer = await Offer.findById(id)
-    if (!result_offer) return
-    
-    result_offer.offerName = offerName
-    result_offer.offerDescription = offerLocation
-    result_offer.offerImagePath = offerImagePath
-    result_offer.offerDescription = offerDescription
+        const result_offer = await Offer.findById(req.params.id)
+        if (!result_offer) return
+
+        result_offer.offerName = offerName
+        result_offer.offerDescription = offerLocation
+        result_offer.offerImagePath = offerImagePath
+        result_offer.offerDescription = offerDescription
 
 
-    const updatedResult = await result_offer.save()
-    
-    console.log(updatedResult)
+        const updatedResult = await result_offer.save()
+
+        console.log(updatedResult)
     }
-    
+
     updateCourse()
 
     res.end('Data Updated')
@@ -96,10 +149,12 @@ app.post('/updateofferbyid', (req, res) => {
 
 
 //find by id and delete 
-app.post('/deleteofferbyid', (req, res) => {
+app.delete('/deleteofferbyid/:id', (req, res) => {
 
     let getOffersByID = async () => {
-        const deletedResult = await Offer.deleteOne({_id:req.body.id})
+        const deletedResult = await Offer.deleteOne({
+            _id: req.params.id
+        })
         console.log(deletedResult)
     }
 
@@ -110,4 +165,4 @@ app.post('/deleteofferbyid', (req, res) => {
 
 
 
-app.listen(5000 , () => console.log('server started...'))
+app.listen(5000, () => console.log('server started...'))

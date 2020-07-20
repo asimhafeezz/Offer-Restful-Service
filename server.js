@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
+const fs = require('fs')
 const multer =require('multer')
 const path=require('path');
 const directory = '../../carrentalmanagement/public/offerImages';
@@ -40,11 +41,11 @@ const {
 
 
 //upload images
-app.post('/uploadFile', upload.single('offerImage'), (req, res) => {
-    let offerImagePath = req.file.originalname
+app.post('/offer', upload.single('offerImage'), (req, res) => {
+    // let offerImagePath = req.file.originalname
 
-    console.log("offerimagepath",offerImagePath)
-    console.log("offerbody",req.body)
+    // console.log("offerimagepath",offerImagePath)
+    // console.log("offerbody",req.body)
     let {
         offerName,
         offerLocation,
@@ -75,32 +76,32 @@ app.get('/getImage',(req,res)=>{
 })
 
 
-//add new offer
-app.post('/offer', (req, res) => {
+// //add new offer
+// app.post('/offer', (req, res) => {
 
-    let {
-        offerName,
-        offerLocation,
-        offerImagePath,
-        offerDescription
-    } = req.body
+//     let {
+//         offerName,
+//         offerLocation,
+//         offerImagePath,
+//         offerDescription
+//     } = req.body
 
-    let addOffer = async () => {
-        const offer = new Offer({
-            offerName: offerName,
-            offerLocation: offerLocation,
-            offerImagePath: offerImagePath,
-            offerDescription: offerDescription
-        })
+//     let addOffer = async () => {
+//         const offer = new Offer({
+//             offerName: offerName,
+//             offerLocation: offerLocation,
+//             offerImagePath: offerImagePath,
+//             offerDescription: offerDescription
+//         })
 
-        const result = await offer.save()
-        console.log(result)
-    }
+//         const result = await offer.save()
+//         console.log(result)
+//     }
 
-    addOffer()
+//     addOffer()
 
-    res.end('Data saved')
-})
+//     res.end('Data saved')
+// })
 
 //get all offers offer
 app.get('/alloffer', (req, res) => {
@@ -120,12 +121,11 @@ app.get('/offerfindbyid/:id', (req, res) => {
 })
 
 //update offer by id 
-app.put('/updateofferbyid/:id', (req, res) => {
+app.put('/updateofferbyid/:id', upload.single('offerImage') , (req, res) => {
 
     let {
         offerName,
         offerLocation,
-        offerImagePath,
         offerDescription
     } = req.body
 
@@ -135,11 +135,18 @@ app.put('/updateofferbyid/:id', (req, res) => {
         const result_offer = await Offer.findById(req.params.id)
         if (!result_offer) return
 
+        fs.unlink(directory + "/" + result_offer.offerImagePath, function (err) {
+            if (err) throw err;
+            // if no error, file has been deleted successfully
+            console.log('File deleted!');
+        }); 
+
         result_offer.offerName = offerName
         result_offer.offerDescription = offerLocation
-        result_offer.offerImagePath = offerImagePath
+        result_offer.offerImagePath = fname
         result_offer.offerDescription = offerDescription
 
+        
 
         const updatedResult = await result_offer.save()
 
@@ -156,6 +163,15 @@ app.put('/updateofferbyid/:id', (req, res) => {
 app.delete('/deleteofferbyid/:id', (req, res) => {
 
     let getOffersByID = async () => {
+        const result_offer = await Offer.findById(req.params.id)
+
+        if(result_offer)
+        fs.unlink(directory + "/" + result_offer.offerImagePath, function (err) {
+            if (err) throw err;
+            // if no error, file has been deleted successfully
+            console.log('File deleted!');
+        }); 
+
         const deletedResult = await Offer.deleteOne({
             _id: req.params.id
         })

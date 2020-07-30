@@ -2,18 +2,24 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
+const { v4: uuidv4 } = require('uuid');
+
 const fs = require('fs')
 const multer =require('multer')
 const path=require('path');
-const directory = '../../carrentalmanagement/public/offerImages';
+const directory = './public/offerImages';
 var fname = null
+
+
+
+
 const storage=multer.diskStorage({
         destination:function(req,file,cb){
                 //define the directory
                 cb(null,directory);
         },
         filename:function(req,file,cb){
-                fname = new Date().toISOString().replace(/:/g, '-')+file.originalname
+                fname = uuidv4() +file.originalname
                 cb(null,fname);
         }
 });
@@ -21,6 +27,9 @@ const upload=multer({storage:storage});
 
 const app = express()
 
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public/offerImages')));
 
 //body-parser
 app.use(bodyParser.urlencoded({
@@ -76,33 +85,6 @@ app.get('/getImage',(req,res)=>{
 })
 
 
-// //add new offer
-// app.post('/offer', (req, res) => {
-
-//     let {
-//         offerName,
-//         offerLocation,
-//         offerImagePath,
-//         offerDescription
-//     } = req.body
-
-//     let addOffer = async () => {
-//         const offer = new Offer({
-//             offerName: offerName,
-//             offerLocation: offerLocation,
-//             offerImagePath: offerImagePath,
-//             offerDescription: offerDescription
-//         })
-
-//         const result = await offer.save()
-//         console.log(result)
-//     }
-
-//     addOffer()
-
-//     res.end('Data saved')
-// })
-
 //get all offers offer
 app.get('/alloffer', (req, res) => {
 
@@ -141,6 +123,12 @@ app.put('/updateofferbyid/:id', upload.single('offerImage') , (req, res) => {
             console.log('File deleted!');
         }); 
 
+        // fs.unlink(directory2 + "/" + result_offer.offerImagePath, function (err) {
+        //     if (err) throw err;
+        //     // if no error, file has been deleted successfully
+        //     console.log('File deleted!');
+        // });
+
         result_offer.offerName = offerName
         result_offer.offerDescription = offerLocation
         result_offer.offerImagePath = fname
@@ -170,7 +158,12 @@ app.delete('/deleteofferbyid/:id', (req, res) => {
             if (err) throw err;
             // if no error, file has been deleted successfully
             console.log('File deleted!');
-        }); 
+        });
+        // fs.unlink(directory2 + "/" + result_offer.offerImagePath, function (err) {
+        //     if (err) throw err;
+        //     // if no error, file has been deleted successfully
+        //     console.log('File deleted!');
+        // });
 
         const deletedResult = await Offer.deleteOne({
             _id: req.params.id
@@ -187,8 +180,14 @@ app.delete('/deleteofferbyid/:id', (req, res) => {
 
 //testing
 app.get('/test', (req, res) => {
-    console.log("body" , req.body)
-    console.log("req",req)
+var stats = fs.statSync("D:/code/project/carrentalmanagement/public/offerImages");
+    console.log('File Size in Bytes:- ' + stats.size);
+    getSize("D:/code/project/carrentalmanagement/public/offerImages", (err, size) => {
+  if (err) { throw err; }
+ 
+  console.log(size + ' bytes');
+//   console.log((size / 1024 / 1024).toFixed(2) + ' MB');
+});
 })
 
 

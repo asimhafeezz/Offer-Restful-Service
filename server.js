@@ -116,7 +116,7 @@ app.put('/updateofferbyid/:id', upload.single('offerImage') , (req, res) => {
 
         const result_offer = await Offer.findById(req.params.id)
         if (!result_offer) return
-        else if (req.file.originalname === undefined || req.file.originalname === '' || req.file.originalname === null) {
+        else if (req.file === undefined) {
         result_offer.offerName = offerName
         result_offer.offerDescription = offerLocation
         result_offer.offerImagePath = result_offer.offerImagePath

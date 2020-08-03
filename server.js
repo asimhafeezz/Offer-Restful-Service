@@ -79,9 +79,9 @@ app.post('/offer', upload.single('offerImage'), (req, res) => {
 })
 
 app.get('/getImage',(req,res)=>{
-    const {offerImage}=req.body;
+    const filename=req.file.originalname;
 
-    res.send(path.resolve(directory+offerImage));
+    res.send(path.resolve(directory+filename));
 })
 
 
@@ -116,23 +116,25 @@ app.put('/updateofferbyid/:id', upload.single('offerImage') , (req, res) => {
 
         const result_offer = await Offer.findById(req.params.id)
         if (!result_offer) return
-
-        fs.unlink(directory + "/" + result_offer.offerImagePath, function (err) {
-            if (err) throw err;
-            // if no error, file has been deleted successfully
-            console.log('File deleted!');
-        }); 
-
-        // fs.unlink(directory2 + "/" + result_offer.offerImagePath, function (err) {
-        //     if (err) throw err;
-        //     // if no error, file has been deleted successfully
-        //     console.log('File deleted!');
-        // });
-
+        else if (req.file.originalname === undefined || req.file.originalname === '' || req.file.originalname === null) {
         result_offer.offerName = offerName
         result_offer.offerDescription = offerLocation
-        result_offer.offerImagePath = fname
+        result_offer.offerImagePath = result_offer.offerImagePath
         result_offer.offerDescription = offerDescription
+        }
+        else {
+            fs.unlink('D:/code/project/backend/offer services/public/offerImages' + "/" + result_offer.offerImagePath, function (err) {
+                if (err) throw err;
+                // if no error, file has been deleted successfully
+                console.log('File deleted!');
+            });
+    
+            result_offer.offerName = offerName
+            result_offer.offerDescription = offerLocation
+            result_offer.offerImagePath = fname
+            result_offer.offerDescription = offerDescription
+        }
+        
 
         
 
@@ -154,21 +156,15 @@ app.delete('/deleteofferbyid/:id', (req, res) => {
         const result_offer = await Offer.findById(req.params.id)
 
         if(result_offer)
-        fs.unlink(directory + "/" + result_offer.offerImagePath, function (err) {
+        fs.unlink('D:/code/project/backend/offer services/public/offerImages' + "/" + result_offer.offerImagePath, function (err) {
             if (err) throw err;
             // if no error, file has been deleted successfully
             console.log('File deleted!');
         });
-        // fs.unlink(directory2 + "/" + result_offer.offerImagePath, function (err) {
-        //     if (err) throw err;
-        //     // if no error, file has been deleted successfully
-        //     console.log('File deleted!');
-        // });
 
-        const deletedResult = await Offer.deleteOne({
+        await Offer.deleteOne({
             _id: req.params.id
         })
-        console.log(deletedResult)
     }
 
     getOffersByID()

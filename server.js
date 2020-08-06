@@ -187,4 +187,4 @@ var stats = fs.statSync("D:/code/project/carrentalmanagement/public/offerImages"
 })
 
 
-app.listen(5000, () => console.log('server started...'))
+app.listen(3332, () => console.log('server started...'))
